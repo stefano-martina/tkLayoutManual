@@ -6,11 +6,14 @@ git\documentclass[12pt, a4paper]{article}
 \usepackage{footnote}
 \usepackage{graphicx}
 %\pagestyle{empty}
+
+\definecolor{darkgreen}{rgb}{0.01, 0.75, 0.24}
+
 \newcommand{\cell}[2][c]{%
   \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
-\newcommand{\rowhead}[2]{\cell{\color{red}#1\\ \color{green}#2}}
-\newcommand{\cont}[5]{\cell{\color{red}#1\\ \color{blue}#2\\ #3\\ #4\\ \color{green}#5}}
-\newcommand{\deprecont}[5]{\cell{\color{red}#1\\ \color{blue}#2\\ #3\\ #4\\ \color{green}#5\\ \color{red}Deprecated warning}}
+\newcommand{\rowhead}[2]{\cell{\color{red}#1\\ \color{darkgreen}#2}}
+\newcommand{\cont}[5]{\cell{\color{red}#1\\ \color{blue}#2\\ #3\\ #4\\ \color{darkgreen}#5}}
+\newcommand{\deprecont}[5]{\cell{\color{red}#1\\ \color{blue}#2\\ #3\\ #4\\ \color{darkgreen}#5\\ \color{red}Deprecated warning}}
 \newcommand{\noacc}{No accumulation}
 \newcommand{\acc}{Accumulation}
 \newcommand{\noconv}{No conversion}
@@ -321,7 +324,8 @@ possible to define:
 \subsection{Material routing effects}
 Depending of the value of the \prop{type} property inside the
 configuration files, the material is distributed in different
-positions inside the tracker volume. 
+positions inside the tracker volume. Apart the module volumes, the
+algorithm builds special sections for the routing of the module
 
 The first column is where the material is defined and if is defined
 with \emph{service} true or false. The other columns are the different
@@ -339,15 +343,15 @@ possible or not to set the scaling on channels.
           \fontsize{7pt}{8.3}\selectfont
           \begin{tabular}{|c||c|c|c|}
             \hline
-            & \color{green}Unit=$g/m$ & \color{green}Unit=$mm$ & \color{green}Unit=$g$\\
+            & \color{darkgreen}Unit=$g/m$ & \color{darkgreen}Unit=$mm$ & \color{darkgreen}Unit=$g$\\
             \hline\hline
             \rowhead{Module}{\serfal} & \cont{Module}{$\times \modlen$}{\noacc}{\noconv}{\sca}& \cont{Module}{$\times \modsur\times \rho$ (sensor surface)}{\noacc}{\noconv}{\sca}& \cont{Module}{$\times 1$}{\noacc}{\noconv}{\sca}\\
             \hline
             \rowhead{Module in ring $R$\footnote{of $N$ rings}}{\sertru\footnote{\label{sertrunote}may be converted by station}} & \cont{\follsup}{$\times \nummod_R \times \suplen_i$}{\acc}{\conv (1:1 by default, with warning)}{\sca} & \deprecont{\follsup}{$\times \nummod_R \times \supsur_i \times \rho$}{\acc}{\conv  (1:1 by default, with warning)}{\sca} & \err \\
             \hline
-            \rowhead{Rod (barrel\footnote{line of one module per ring with same $\phi$})}{\serfal} & \cont{\allsup}{$\times \nummod_1 \times \suplen_i$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \nummod_1 \times \frac{\suplen_i}{\sum_{j=1}^N\suplen_j}$}{\noacc}{\noconv}{\nosca} \\
+            \rowhead{Rod\footnote{\label{rodnote}line of one module per ring with same $\phi$} (only barrel)}{\serfal} & \cont{\allsup}{$\times \nummod_1 \times \suplen_i$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \nummod_1 \times \frac{\suplen_i}{\sum_{j=1}^N\suplen_j}$}{\noacc}{\noconv}{\nosca} \\
             \hline
-            \rowhead{Rod (barrel)}{\sertru\textsuperscript{\ref{sertrunote}}} & \cont{\allsup}{$\times \nummod_1 \times \suplen_i$}{\noacc}{\conv}{\nosca} & \deprecont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\conv}{\nosca} & \err \\
+            \rowhead{Rod\textsuperscript{\ref{rodnote}} (only barrel)}{\sertru\textsuperscript{\ref{sertrunote}}} & \cont{\allsup}{$\times \nummod_1 \times \suplen_i$}{\noacc}{\conv}{\nosca} & \deprecont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\conv}{\nosca} & \err \\
             \hline
             \rowhead{Layer/Disk}{\serfal} & \cont{\allsup}{$\times \suplen_i$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \frac{\suplen_i}{\sum_{j=1}^N\suplen_j}$}{\noacc}{\noconv}{\nosca} \\
             \hline
