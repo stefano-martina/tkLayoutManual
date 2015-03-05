@@ -78,6 +78,9 @@ barrels and endcaps with the cable exit point (upper right point of
 tracker). Section~\ref{sec:developerManual} deal with the description
 in detail of the routing algorithm from a developer point of view.
 
+
+
+
 \section{User manual}\label{sec:userManual}
 \subsection{Configuration files}
 The configuration files regarding the material are located in the main
@@ -371,11 +374,111 @@ possible or not to set the scaling on channels.
   \end{table}
 \end{landscape}
 
+
+
 \section{Developer manual}\label{sec:developerManual}
 
 \subsection{General algorithm description}
 
+
+
+
+
+
 \subsection{Classes description}
+
+\subsubsection{namespace insur}
+
+\begin{itemize}
+
+\item \textbf{MaterialBudget}\\
+This class integrates information from a \emph{Tracker} and an \emph{InactiveSurface} instance with a collection of \emph{ModuleCap} instances to provide the full material budget of a tracker.\\
+Its main function accepts an instance of a material calculator as an input parameter in order to use that calculator's more specialised functions to assign mixtures of materials to the different categories of volumes in the tracker geometry. Afterwards, each individual volume is ready to calculate its total mass, its radiation length and its interaction length, which is also taken care of by the calculator class. A material budget that has been filled in this way can then be passed on to be analysed by an instance of an \emph{Analyzer} class.
+
+\item \textbf{MaterialProperties}\\
+This is the base class for collections of properties related to the material budget.\\
+It encapsulates the main parameters of interest, namely the overall density, radiation length and interaction length of a tracker element, as well as the influence of the materials that make up this building block. Access functions are provided where appropriate. But unless the object is cloned the overall parameters should typically be calculated from a list of materials and their properties rather than set explicitly. Some of the access functions for individual materials may throw exceptions if the requested material does not appear on the list.
+
+\item \textbf{MaterialTable} \\
+Essentially, this is a collection class for \emph{MaterialRow} instances.\\
+It provides access functions for individual entries and a couple of bookkeeping calls.\\
+The access functions may trow exceptions if an entry doesn't exist or if an index is out of range.
+
+\item \textbf{BaseMaterial}
+\item \textbf{MaterialTable2}
+\item \textbf{ElementaryMaterial : public BaseMaterial}
+\item \textbf{CompositeMaterial : public BaseMaterial}
+
+\item \textbf{InactiveElement : public MaterialProperties}\\
+This is the base class for the elements that make up the inactive surfaces.\\
+Since all inactive elements are simplified to tube shapes in the geometrical model, the geometry parameters have been packed into the base class. All of these parameters apply to descendants of a different shape as well, though, because they describe relations between the object and the origin, not between points within the object.
+
+\item \textbf{InactiveRing : public InactiveElement}\\
+The only thing that this class adds to its parent is a check that it is a ring rather than a tube.
+
+\item \textbf{InactiveSurfaces}\\
+This is the top-level container class  for the inactive surfaces.\\
+It contains lists of all subgroups of inactive volumes: the services list and the supporting parts list.\\
+It provides access functions to them or their individual elements that typically copy a new element to its place at the end of the vector or return a reference to a requested element. It also stores the type of configuration (UP or DOWN) in a boolean flag. Some of the access functions to individual elements may throw an exception if the requested index is out of range.
+
+\item \textbf{InactiveTube : public InactiveElement}\\
+The only thing that this class adds to its parent is a check that it is a tube rather than a ring.
+
+\item \textbf{MatCalc}\\
+This class provides the core material assignment algorithm for a given tracker geometry.\\
+Once its internal data structures have been initialised from the material config file by the \emph{MatParser} class, it uses that information, combined with the geometry and position of an individual tracker element, to set the local and exiting materials vector that element before getting it to calculate its overall mass, its radiation length and its interaction length. The tracker geometry is ready for further study afterwards. Some of the access functions for various internal list elements may return an exception if the requested element does not exist on the list.
+
+\end{itemize}
+
+
+
+\subsubsection{namespace material}
+
+\begin{itemize}
+
+\item \textbf{MaterialObject : public PropertyObject}
+\item \textbf{MaterialObject::ReferenceSensor : public PropertyObject}
+\item \textbf{MaterialObject::MaterialObjectKey}
+\item \textbf{MaterialObject::Element : public PropertyObject}
+\item \textbf{MaterialObject::Component : public PropertyObject}
+\item \textbf{MaterialObject::Materials : public PropertyObject}
+\item \textbf{MaterialSection : public MaterialObject}
+\item \textbf{MaterialStation : public MaterialSection}
+\item \textbf{MaterialTab : public MaterialTabType}
+
+\item \textbf{Materialway}\\
+Represents a track where the materials are routed from the modules to the appropriate end.\\ 
+The materialway is make up from single elements \emph{Element}, every element pointing to the possible single next element. Every module is linked to a materialway element where it puts its materials to be routed, the material is then deposited on the element and forwarded to the next element, passing through the chain from an element to the subsequent one until the material reaches its designated end.\\ 
+Every materialway element can perform some transformation on the routed material before it is forwarded to the next element.
+
+\item \textbf{Materialway::RodSectionsStation}
+
+\item \textbf{Materialway::Section}\\
+Represents a single element of the materialway.
+
+\item \textbf{Materialway::Station : public Materialway::Section}
+
+\item \textbf{Materialway::Boundary}\\
+Represents a boundary where the services are routed around.
+
+\item \textbf{Materialway::OuterUsher}\\
+This is the core of the functionality that builds sections across boundaries starting from a point and ending to another section or to the upper right angle.
+
+\item \textbf{Materialway::InnerUsher}\\
+Builds the internal sections of a boundary.
+
+\item \textbf{Materialway::ModuleUsher}\\
+Adds materials to the modules.
+
+\item \textbf{ConversionStation : public MaterialObject}
+\item \textbf{ConversionStation::Inoutput : public PropertyObject}
+\item \textbf{ConversionStation::Conversion : public PropertyObject}
+\item \textbf{WeightDistributionGrid : public WeightDistributionGridMapType}
+
+\end{itemize}
+
+
+
 \end{document}
 
 
