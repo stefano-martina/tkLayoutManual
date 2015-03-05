@@ -1,4 +1,4 @@
-\documentclass[12pt, a4paper]{article}
+git\documentclass[12pt, a4paper]{article}
 \usepackage{lmodern}
 %\usepackage[margin=1cm]{geometry}
 \usepackage{pdflscape}
@@ -30,6 +30,9 @@
 \newcommand{\supsur}{supportSurface}
 \newcommand{\tkl}{tkLayout}
 
+\newcommand{\pat}[1]{\texttt{#1}}
+\newcommand{\prop}[1]{\texttt{#1}}
+
 
 \begin{document}
 \section{Introduction to material model}
@@ -50,7 +53,7 @@ Is also possible to set material from every element:
 \item exiting.
 \end{itemize}
 
-\begin{figure}[h]
+\begin{figure}[hbtp]
   \centering
   \includegraphics[width=\textwidth]{img/materialMap.pdf}  
   \caption{Material routing}
@@ -76,7 +79,247 @@ tracker). Section~\ref{sec:developerManual} deal with the description
 in detail of the routing algorithm from a developer point of view.
 
 \section{User manual}\label{sec:userManual}
+\subsection{Configuration files}
+The configuration files regarding the material are located in the main
+configuration directory, inside:
+\begin{itemize}
+\item \pat{config/stdinclude/Materials/} for the definition of the
+  materials;
+\item \pat{config/stdinclude/Conversion/} for the definition of the
+  \emph{conversions}.
+\end{itemize}
+
+In the \emph{geometry} files, the \emph{materials} should be included
+at \emph{layer/disk} level, at \emph{rod} level or at \emph{module}
+level, depending of the type of materials. The \emph{conversions}
+instead should be included at \emph{layer} or \emph{disk} level. Like
+all the properties, also for the materials is possible to define them before
+the correct level and them are propagated downward.
+
+\begin{figure}[hbtp]
+\begin{verbatim}
+...
+Barrel TB2S {
+  @includestd ModuleTypes/pt2S
+  @includestd Materials/pt2S_320_18
+  @includestd Materials/rodPt2S
+  @includestd Conversions/flangeTB2S
+
+  dsDistance 1.8
+  Layer 1 { triggerWindow 9 }
+...
+\end{verbatim}
+\caption{\pat{geometries/.../Baseline2015.cfg}}
+\label{fig:geofile}
+\end{figure}
+In figure~\ref{fig:geofile} is possible to see a fragment of a
+geometry configuration file with the inclusion of \emph{material} and
+\emph{conversion} files.
+\begin{figure}[hbtp]
+\begin{verbatim}
+...
+Materials module-pt2S_320_40 {
+  type module
+
+  // Default sensor:
+  ReferenceSensor 1 {
+    numStripsAcross 1016
+    numSegments 2
+  }
+  ReferenceSensor 2 {
+    numStripsAcross 1016
+    numSegments 2
+  } 
+
+  // Sensor and hybrid stuff
+  // Sensor
+  Component {
+    componentName "2S Sensors"
+    service false
+    scaleOnSensor 0
+    Element {
+      elementName SenSi
+      quantity 0.2
+      unit mm
+      targetVolume 1
+    }
+  }
+...
+\end{verbatim}
+\caption{\pat{config/.../Materials/pt2S\_320\_40}}
+\label{fig:matPt2sFile}
+\end{figure}
+Figure~\ref{fig:matPt2sFile} is the definition of a \emph{module}
+material, with \emph{reference sensors} for the scaling.
+\begin{figure}[hbtp]
+\begin{verbatim}
+...
+Materials rodPt2S {
+  type rod
+
+  // Cooling for the module
+  Component {
+    componentName Cooling
+    service true
+    scaleOnSensor 0
+    Element {
+      elementName Steel
+      quantity 10.29
+      unit g/m
+    }
+    Element {
+      elementName CO2
+      quantity 6.28
+      unit g/m
+    }
+  }
+...
+\end{verbatim}
+\caption{\pat{config/.../Materials/rodPt2S}}
+\label{fig:matRodPt2sFile}
+\end{figure}
+Figure~\ref{fig:matRodPt2sFile} is the definition of material inside
+the barrel rods.
+\begin{figure}[hbtp]
+\begin{verbatim}
+...
+Station {
+  stationName flangeTB2S
+  type flange
+...
+  Conversion {
+    Input {
+      Element {
+        elementName Cu_MV
+        quantity 10
+        unit g/m
+      }
+    }
+    Output {
+      Element {
+        elementName Cu
+        quantity 10
+        unit g/m
+        service true
+      }
+      Element {
+        elementName Cu
+        quantity 0.423
+        unit g
+        service false
+      }
+      Element {
+        elementName PE
+        quantity 0.371
+        unit g
+        service false
+      }
+    }
+  }
+...
+\end{verbatim}
+\caption{\pat{config/.../Conversions/flangeTB2S}}
+\label{fig:convFlangeFile}
+\end{figure}
+Figure~\ref{fig:convFlangeFile} is a definition of a flange
+conversion.
+
+Let's analyze more in detail the structure of the configuration files.
+
+\paragraph{Material configuration file}
+The material configuration files have a structure made of
+\emph{components} blocks with inside \emph{elements} blocks, and are ready for
+representing also structures of \emph{components} with inside other
+\emph{components}. One block of material is defined with the property
+\prop{Materials}, inside that block is possible to define:
+\begin{itemize} 
+\item \prop{type} define the destination of material, the object on wich the material
+  belongs, is mandatory and
+  can be: \prop{module}; \prop{rod} only for barrels; \prop{layer} also for the disks;
+\item \prop{ReferenceSensor} have sense only for \prop{module}
+  material and define
+  one reference sensor for scaling the material (if the scaling is
+  active), is possible to define more than one \prop{ReferenceSensor} and each one must have:
+  \begin{itemize} 
+  \item \prop{numSegments} the numbers of segments for each module;
+  \item \prop{numStripsAcross} the numbers of strips for each segment;
+  \end{itemize}
+\item \prop{Component} is a container of \emph{elements}, and is
+  possible to define zero or more of them, inside can have other \prop{Component} or:
+  \begin{itemize} 
+  \item \prop{Element} define a single material, each \emph{component}
+    can have zero or more \emph{elements} and have the properties:
+    \begin{itemize} 
+    \item \prop{componentName} the name of inner component, not mandatory;
+    \item \prop{elementName} the name of the element, mandatory;
+    \item \prop{quantity} mandatory;
+    \item \prop{unit} the unit between \prop{g/m}, \prop{mm}, \prop{g}, mandatory;
+    \item \prop{service} if the material is locally in the object that
+      have the material (\prop{false}) or exiting from it (\prop{true}), false by default;
+    \item \prop{scaleOnSensor} used only on \prop{module} materials, if \prop{0} (by default) the element don't scale on sensor, otherwise scale on the specified sensor;
+    \item \prop{referenceSensor} used only on \prop{module} materials with \prop{scaleOnSensor} active, specify the sensor of reference between the list provided before;
+    \item \prop{targetVolume} used only on \prop{module} materials,
+      specify the target volume index inside the module, on wich the
+      element is distributed (only for the \emph{XML} export), the value can
+      be: \prop{0} (by default) both sides and both frontends;
+      \prop{1} first sensor surface; \prop{2} second sensor surface;
+      \prop{7} volume between the sensors; \prop{3} bottom side;
+      \prop{4} top side; \prop{34} both sides; \prop{5} left frontend;
+      \prop{6} right frontend; \prop{56} both frontends;
+    \item \prop{destination} if defined specify the name of the second
+      level conversion on wich the element is converted;
+    \item \prop{debugInactivate} specify if deactivating the element
+      or not for debugging purposes, \prop{false} by default.
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\paragraph{Conversion configuration file}
+The conversion configuration files have a structure made of
+\emph{conversions} blocks, each one with an \emph{element} as
+input, and zero or more \emph{elements} as output. One conversion
+station is defined with a block \prop{Station}, inside that block is
+possible to define:
+\begin{itemize}
+\item \prop{stationName} is the identifier, used also
+  for the \prop{destination} property of the material \emph{elements},
+  is mandatory;
+\item \prop{type} specify the kind of station, is
+  mandatory and can be: \prop{flange} or \prop{second};
+\item \prop{minZ} used only for \prop{second}
+  stations, specify the position;
+\item \prop{maxZ} as the previous;
+\item \prop{Conversion} define a single \emph{conversion} done by the
+  station, is possible to define zero or more of them and is
+  constituted of:
+  \begin{itemize}
+  \item \prop{Input} mandatory, only one for \prop{Conversion} inside have:
+    \begin{itemize}
+    \item \prop{Element} mandatory, only one for \prop{Input}, is
+      the element to be converted, have the same structure of
+      \emph{materials} elements, but the only properties that have a
+      meaning inside the current position are: \prop{elementName},
+      \prop{quantity}, \prop{unit};
+    \end{itemize}
+  \item \prop{Output} mandatory, only one for
+    \prop{Conversion} and have:
+    \begin{itemize}
+    \item \prop{Element} is possible to define zero or more of them,
+      and is the result of the conversion, have the same structure of
+      \emph{materials} elements, but the only properties that have a
+      meaning inside the current position are: \prop{elementName},
+      \prop{quantity}, \prop{unit}, \prop{service}; for the last one, if false (by default) the
+      material go inside the conversion object (flange or custom
+      for second), if true go out from it.
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
 \subsection{Material routing effects}
+Depending of the value of the \prop{type} property inside the
+configuration files, the material is distributed in different
+positions inside the tracker volume. 
+
 The first column is where the material is defined and if is defined
 with \emph{service} true or false. The other columns are the different
 effect regarding the unit of measure of the material, for each cell:
@@ -86,40 +329,46 @@ along the layer/disk; the fourth specify if the material is converted
 after the layer/disk or only stay in the layer/disk; the fifth if is
 possible or not to set the scaling on channels.
 \begin{landscape}
-  \begin{savenotes}
-    \begin{center}
-      \fontsize{7pt}{8.3}\selectfont
-      \begin{tabular}{|c||c|c|c|}
-        \hline
-        & \color{green}Unit=$g/m$ & \color{green}Unit=$mm$ & \color{green}Unit=$g$\\
-        \hline\hline
-        \rowhead{Module}{\serfal} & \cont{Module}{$\times \modlen$}{\noacc}{\noconv}{\sca}& \cont{Module}{$\times \modsur\times \rho$ (sensor surface)}{\noacc}{\noconv}{\sca}& \cont{Module}{$\times 1$}{\noacc}{\noconv}{\sca}\\
-        \hline
-        \rowhead{Module in ring $R$\footnote{of $N$ rings}}{\sertru\footnote{\label{sertrunote}may be converted by station}} & \cont{\follsup}{$\times \nummod_R \times \suplen_i$}{\acc}{\conv (1:1 by default, with warning)}{\sca} & \deprecont{\follsup}{$\times \nummod_R \times \supsur_i \times \rho$}{\acc}{\conv  (1:1 by default, with warning)}{\sca} & \err \\
-        \hline
-        \rowhead{Rod (barrel\footnote{line of one module per ring with same $\phi$})}{\serfal} & \cont{\allsup}{$\times \nummod_1 \times \suplen_i$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \nummod_1 \times \frac{\suplen_i}{\sum_{j=1}^N\suplen_j}$}{\noacc}{\noconv}{\nosca} \\
-        \hline
-        \rowhead{Rod (barrel)}{\sertru\textsuperscript{\ref{sertrunote}}} & \cont{\allsup}{$\times \nummod_1 \times \suplen_i$}{\noacc}{\conv}{\nosca} & \deprecont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\conv}{\nosca} & \err \\
-        \hline
-        \rowhead{Layer/Disk}{\serfal} & \cont{\allsup}{$\times \suplen_i$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \frac{\suplen_i}{\sum_{j=1}^N\suplen_j}$}{\noacc}{\noconv}{\nosca} \\
-        \hline
-        \rowhead{Layer/Disk}{\sertru\textsuperscript{\ref{sertrunote}}} & \cont{\allsup}{$\times \suplen_i$}{\noacc}{\conv}{\nosca} & \deprecont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\conv}{\nosca} & \err \\
-        \hline
-      \end{tabular}
-    \end{center}
-    \begin{center}
-      \tiny
-      \begin{tabular}{|c|c|c|c|}
-        \hline
-        & Modules & Cylind. service sections & disk service section \\
-        \hline
-        Length & Local $y$ & $\Delta z$ & $\Delta r$ \\
-        \hline
-        Surface & Sensor surface & $2\pi r \Delta z$ & $\pi({r_2}^2 - {r_1}^2)$ \\
-        \hline
-      \end{tabular}
-    \end{center}
-  \end{savenotes}
+  \begin{table}[hbtp]
+    \begin{minipage}{\textwidth}
+      \begin{savenotes}
+        \begin{center}
+          \fontsize{7pt}{8.3}\selectfont
+          \begin{tabular}{|c||c|c|c|}
+            \hline
+            & \color{green}Unit=$g/m$ & \color{green}Unit=$mm$ & \color{green}Unit=$g$\\
+            \hline\hline
+            \rowhead{Module}{\serfal} & \cont{Module}{$\times \modlen$}{\noacc}{\noconv}{\sca}& \cont{Module}{$\times \modsur\times \rho$ (sensor surface)}{\noacc}{\noconv}{\sca}& \cont{Module}{$\times 1$}{\noacc}{\noconv}{\sca}\\
+            \hline
+            \rowhead{Module in ring $R$\footnote{of $N$ rings}}{\sertru\footnote{\label{sertrunote}may be converted by station}} & \cont{\follsup}{$\times \nummod_R \times \suplen_i$}{\acc}{\conv (1:1 by default, with warning)}{\sca} & \deprecont{\follsup}{$\times \nummod_R \times \supsur_i \times \rho$}{\acc}{\conv  (1:1 by default, with warning)}{\sca} & \err \\
+            \hline
+            \rowhead{Rod (barrel\footnote{line of one module per ring with same $\phi$})}{\serfal} & \cont{\allsup}{$\times \nummod_1 \times \suplen_i$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \nummod_1 \times \frac{\suplen_i}{\sum_{j=1}^N\suplen_j}$}{\noacc}{\noconv}{\nosca} \\
+            \hline
+            \rowhead{Rod (barrel)}{\sertru\textsuperscript{\ref{sertrunote}}} & \cont{\allsup}{$\times \nummod_1 \times \suplen_i$}{\noacc}{\conv}{\nosca} & \deprecont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\conv}{\nosca} & \err \\
+            \hline
+            \rowhead{Layer/Disk}{\serfal} & \cont{\allsup}{$\times \suplen_i$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\noconv}{\nosca} & \cont{\allsup}{$\times \frac{\suplen_i}{\sum_{j=1}^N\suplen_j}$}{\noacc}{\noconv}{\nosca} \\
+            \hline
+            \rowhead{Layer/Disk}{\sertru\textsuperscript{\ref{sertrunote}}} & \cont{\allsup}{$\times \suplen_i$}{\noacc}{\conv}{\nosca} & \deprecont{\allsup}{$\times \supsur_i \times \rho$}{\noacc}{\conv}{\nosca} & \err \\
+            \hline
+          \end{tabular}
+        \end{center}
+        \begin{center}
+          \tiny
+          \begin{tabular}{|c|c|c|c|}
+            \hline
+            & Modules & Cylind. service sections & disk service section \\
+            \hline
+            Length & Local $y$ & $\Delta z$ & $\Delta r$ \\
+            \hline
+            Surface & Sensor surface & $2\pi r \Delta z$ & $\pi({r_2}^2 - {r_1}^2)$ \\
+            \hline
+          \end{tabular}
+        \end{center}
+      \end{savenotes}
+    \end{minipage}
+    \caption{Material effects table}
+    \label{tab:materialEffect}
+  \end{table}
 \end{landscape}
 
 \section{Developer manual}\label{sec:developerManual}
