@@ -176,7 +176,7 @@ It provides access functions to them or their individual elements that typically
 The only thing that this class adds to its parent is a check that it is a tube rather than a ring.
 
 \item \textbf{MatCalc}\\
-The MatCalc class provides the core material assignment algorithm for a given tracker geometry.\\
+This class provides the core material assignment algorithm for a given tracker geometry.\\
 Once its internal data structures have been initialised from the material config file by the \emph{MatParser} class, it uses that information, combined with the geometry and position of an individual tracker element, to set the local and exiting materials vector that element before getting it to calculate its overall mass, its radiation length and its interaction length. The tracker geometry is ready for further study afterwards. Some of the access functions for various internal list elements may return an exception if the requested element does not exist on the list.
 
 \end{itemize}
@@ -196,14 +196,31 @@ Once its internal data structures have been initialised from the material config
 \item \textbf{MaterialSection : public MaterialObject}
 \item \textbf{MaterialStation : public MaterialSection}
 \item \textbf{MaterialTab : public MaterialTabType}
-\item \textbf{Materialway}
+
+\item \textbf{Materialway}\\
+Represents a track where the materials are routed from the modules to the appropriate end.\\ 
+The materialway is make up from single elements \emph{Element}, every element pointing to the possible single next element. Every module is linked to a materialway element where it puts its materials to be routed, the material is then deposited on the element and forwarded to the next element, passing through the chain from an element to the subsequent one until the material reaches its designated end.\\ 
+Every materialway element can perform some transformation on the routed material before it is forwarded to the next element.
+
 \item \textbf{Materialway::RodSectionsStation}
-\item \textbf{Materialway::Section}
+
+\item \textbf{Materialway::Section}\\
+Represents a single element of the materialway.
+
 \item \textbf{Materialway::Station : public Materialway::Section}
-\item \textbf{Materialway::Boundary}
-\item \textbf{Materialway::OuterUsher}
-\item \textbf{Materialway::InnerUsher}
-\item \textbf{Materialway::ModuleUsher}
+
+\item \textbf{Materialway::Boundary}\\
+Represents a boundary where the services are routed around.
+
+\item \textbf{Materialway::OuterUsher}\\
+This is the core of the functionality that builds sections across boundaries starting from a point and ending to another section or to the upper right angle.
+
+\item \textbf{Materialway::InnerUsher}\\
+Builds the internal sections of a boundary.
+
+\item \textbf{Materialway::ModuleUsher}\\
+Adds materials to the modules.
+
 \item \textbf{ConversionStation : public MaterialObject}
 \item \textbf{ConversionStation::Inoutput : public PropertyObject}
 \item \textbf{ConversionStation::Conversion : public PropertyObject}
