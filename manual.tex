@@ -75,6 +75,9 @@ barrels and endcaps with the cable exit point (upper right point of
 tracker). Section~\ref{sec:developerManual} deal with the description
 in detail of the routing algorithm from a developer point of view.
 
+
+
+
 \section{User manual}\label{sec:userManual}
 \subsection{Material routing effects}
 The first column is where the material is defined and if is defined
@@ -122,11 +125,70 @@ possible or not to set the scaling on channels.
   \end{savenotes}
 \end{landscape}
 
+
+
 \section{Developer manual}\label{sec:developerManual}
 
 \subsection{General algorithm description}
 
+
+
+
+
+
 \subsection{Classes description}
+
+\subsubsection{namespace insur}
+
+\begin{itemize}
+
+\item MaterialBudget
+\item MaterialProperties
+\item MaterialTable
+\item BaseMaterial
+\item MaterialTable2
+\item ElementaryMaterial : public BaseMaterial
+\item CompositeMaterial : public BaseMaterial
+\item InactiveElement : public MaterialProperties
+\item InactiveRing : public InactiveElement
+\item InactiveSurfaces
+\item InactiveTube : public InactiveElement
+\item MatCalc
+
+\end{itemize}
+
+
+
+\subsubsection{namespace material}
+
+\begin{itemize}
+
+\item MaterialObject : public PropertyObject
+\item MaterialObject::ReferenceSensor : public PropertyObject
+\item MaterialObject::MaterialObjectKey
+\item MaterialObject::Element : public PropertyObject
+\item MaterialObject::Component : public PropertyObject
+\item MaterialObject::Materials : public PropertyObject
+\item MaterialSection : public MaterialObject
+\item MaterialStation : public MaterialSection
+\item MaterialTab : public MaterialTabType
+\item Materialway
+\item Materialway::RodSectionsStation
+\item Materialway::Section
+\item Materialway::Station : public Materialway::Section
+\item Materialway::Boundary
+\item Materialway::OuterUsher
+\item Materialway::InnerUsher
+\item Materialway::ModuleUsher
+\item ConversionStation : public MaterialObject
+\item ConversionStation::Inoutput : public PropertyObject
+\item ConversionStation::Conversion : public PropertyObject
+\item WeightDistributionGrid : public WeightDistributionGridMapType
+
+\end{itemize}
+
+
+
 \end{document}
 
 
