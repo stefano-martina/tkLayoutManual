@@ -262,8 +262,13 @@ representing also structures of \emph{components} with inside other
     \item \prop{unit} the unit between \prop{g/m}, \prop{mm}, \prop{g}, mandatory;
     \item \prop{service} if the material is locally in the object that
       have the material (\prop{false}) or exiting from it (\prop{true}), false by default;
-    \item \prop{scaleOnSensor} used only on \prop{module} materials, if \prop{0} (by default) the element don't scale on sensor, otherwise scale on the specified sensor;
-    \item \prop{referenceSensor} used only on \prop{module} materials with \prop{scaleOnSensor} active, specify the sensor of reference between the list provided before;
+    \item \prop{scaleOnSensor} used only on \prop{module} materials,
+      if \prop{0} (by default) the element don't scale on sensor,
+      otherwise scale on the specified sensor, the amount of material
+      is divided by the number of channels of the
+      \prop{ReferenceSensor} with the specified index, and multiplied
+      by the number of channels of the real sensor with the same
+      index;
     \item \prop{targetVolume} used only on \prop{module} materials,
       specify the target volume index inside the module, on wich the
       element is distributed (only for the \emph{XML} export), the value can
